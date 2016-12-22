@@ -89,22 +89,11 @@ func (f *RotatableFileWriter) Write(p []byte) (int, error) {
 	defer f.Unlock() // Defer unlock due to the possibility of early return
 
 	currentFileInfo, err := os.Stat(f.name)
-	if err != nil {
-		// os.Stat will throw an error if the file doesn't exist (ie: it was moved/rotated/deleted)
-		// this specific error is not fatal, and passing along the invalid os.FileInfo pointer causes
-		// the os.SameFile check to fail. This is the desired behavior
-		if !os.IsNotExist(err) {
-			return 0, err
-		}
-	}
-
-	if !os.SameFile(*f.fileInfo, currentFileInfo) {
+	if err != nil || !os.SameFile(*f.fileInfo, currentFileInfo) {
 		err := f.reopen()
 		if err != nil {
 			return 0, err
 		}
-
-		f.fileInfo = &currentFileInfo
 	}
 
 	bytesWritten, err := f.file.Write(p)
