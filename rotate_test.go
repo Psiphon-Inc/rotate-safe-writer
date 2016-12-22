@@ -10,8 +10,10 @@ import (
 func TestRotateKeepsWriting(t *testing.T) {
 	logPath := os.TempDir() + "/rotatable.log"
 	rotatedPath := os.TempDir() + "/rotatable.log.1"
+	defer os.Remove(logPath)
+	defer os.Remove(rotatedPath)
 
-	f, err := NewRotatableFileWriter(logPath, 0777)
+	f, err := NewRotatableFileWriter(logPath, 0666)
 	if err != nil {
 		t.Fatalf("Unable to set log output: %s", err)
 	}
@@ -52,14 +54,13 @@ func TestRotateKeepsWriting(t *testing.T) {
 		t.Errorf("Got: %s, Expected: %s", actual, expected)
 	}
 
-	os.Remove(logPath)
-	os.Remove(rotatedPath)
 }
 
 func TestDeleteWritesNewFile(t *testing.T) {
 	logPath := os.TempDir() + "/rotatable.log"
+	defer os.Remove(logPath)
 
-	f, err := NewRotatableFileWriter(logPath, 0777)
+	f, err := NewRotatableFileWriter(logPath, 0666)
 	if err != nil {
 		t.Fatalf("Unable to set log output: %s", err)
 	}
@@ -99,6 +100,32 @@ func TestDeleteWritesNewFile(t *testing.T) {
 	if actual != expected {
 		t.Errorf("Got: %s, Expected: %s", actual, expected)
 	}
+}
 
-	os.Remove(logPath)
+func TestNormalWrite(t *testing.T) {
+	logPath := os.TempDir() + "/rotatable.log"
+	defer os.Remove(logPath)
+
+	f, err := NewRotatableFileWriter(logPath, 0666)
+	if err != nil {
+		t.Fatalf("Unable to set log output: %s", err)
+	}
+
+	log.SetFlags(0) // disables all formatting
+	log.SetOutput(f)
+
+	for i := 0; i < 5; i++ {
+		log.Println(i)
+	}
+
+	contents, err := ioutil.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Unable read file '%s': %s", logPath, err)
+	}
+	// The file should have all 5 lines in it
+	expected := "0\n1\n2\n3\n4\n"
+	actual := string(contents)
+	if actual != expected {
+		t.Errorf("Got: %s, Expected: %s", actual, expected)
+	}
 }
