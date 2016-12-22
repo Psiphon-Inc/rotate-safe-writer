@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Psiphon-Inc/rotate-safe-writer.svg?branch=master)](https://travis-ci.org/Psiphon-Inc/rotate-safe-writer)
+
 ## Rotate Safe Writer
 
 Makes an `io.Writer` that is resilient to `inode` changes (as caused by logrotate, file deletion, etc.)
