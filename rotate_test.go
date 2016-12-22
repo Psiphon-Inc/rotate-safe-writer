@@ -8,8 +8,8 @@ import (
 )
 
 func TestRotateKeepsWriting(t *testing.T) {
-	logPath := "/tmp/rotatable.log"
-	rotatedPath := "/tmp/rotatable.log.1"
+	logPath := os.TempDir() + "/rotatable.log"
+	rotatedPath := os.TempDir() + "/rotatable.log.1"
 
 	f, err := NewRotatableFileWriter(logPath, 0777)
 	if err != nil {
@@ -57,7 +57,7 @@ func TestRotateKeepsWriting(t *testing.T) {
 }
 
 func TestDeleteWritesNewFile(t *testing.T) {
-	logPath := "/tmp/rotatable.log"
+	logPath := os.TempDir() + "/rotatable.log"
 
 	f, err := NewRotatableFileWriter(logPath, 0777)
 	if err != nil {
