@@ -88,6 +88,16 @@ func (f *RotatableFileWriter) Write(p []byte) (int, error) {
 	f.Lock()
 	defer f.Unlock() // Defer unlock due to the possibility of early return
 
+	// If a call to Write fails while attempting to re-open the file, f.fileInfo
+	// could be left nil, causing subsequent writes to panic. This will attempt
+	// to re-open the file handle prior to writing in that case
+	if f.file == nil || f.fileInfo == nil {
+		err := f.reopen()
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	currentFileInfo, err := os.Stat(f.name)
 	if err != nil || !os.SameFile(*f.fileInfo, currentFileInfo) {
 		err := f.reopen()
@@ -97,6 +107,16 @@ func (f *RotatableFileWriter) Write(p []byte) (int, error) {
 	}
 
 	bytesWritten, err := f.file.Write(p)
+
+	// If the write fails with nothing written, attempt to re-open the file and retry the write
+	if bytesWritten == 0 && err != nil {
+		err = f.reopen()
+		if err != nil {
+			return 0, err
+		}
+
+		bytesWritten, err = f.file.Write(p)
+	}
 
 	return bytesWritten, err
 }
