@@ -26,7 +26,6 @@
 package rotate
 
 import (
-	"errors"
 	"os"
 	"sync"
 	"time"
